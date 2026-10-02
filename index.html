@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff7fb">
+  <title>Tic-tac-toe — a little game for two</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #302a3b;
+      --muted: #6c6475;
+      --pink: #e85c9b;
+      --pink-soft: #ffe1ee;
+      --blue: #438bd5;
+      --blue-soft: #dff1ff;
+      --paper: #fffafc;
+      --line: #eadce7;
+      --shadow: 0 24px 70px #72405b1a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 18px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 10% 12%, #ffe4f0 0, transparent 30%),
+        radial-gradient(ellipse at 92% 88%, #e4f3ff 0, transparent 34%),
+        var(--paper);
+      font-family: ui-rounded, "Avenir Next", Avenir, system-ui, -apple-system, sans-serif;
+    }
+    .game {
+      width: min(100%, 470px);
+      padding: clamp(24px, 6vw, 42px);
+      border: 1px solid #ffffff;
+      border-radius: 30px;
+      background: #ffffffd9;
+      box-shadow: var(--shadow);
+      text-align: center;
+      backdrop-filter: blur(12px);
+    }
+    .eyebrow {
+      margin: 0 0 9px;
+      color: #81516b;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 9vw, 3.2rem);
+      letter-spacing: -.055em;
+      line-height: 1.05;
+    }
+    .intro { margin: 12px 0 25px; color: var(--muted); font-size: .98rem; }
+    .players {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .player {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--muted);
+      background: #fff;
+      font-size: .88rem;
+      font-weight: 700;
+      transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .player strong { margin-right: 5px; font-size: 1.1rem; }
+    .player-x strong { color: var(--pink); }
+    .player-o strong { color: var(--blue); }
+    .player.active-x { border-color: #f3a9c9; background: var(--pink-soft); color: #7d3154; }
+    .player.active-o { border-color: #9bc9ef; background: var(--blue-soft); color: #285b89; }
+    .status {
+      min-height: 28px;
+      margin: 0 0 15px;
+      color: var(--ink);
+      font-size: 1.03rem;
+      font-weight: 750;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      aspect-ratio: 1;
+      padding: 10px;
+      border-radius: 24px;
+      background: linear-gradient(140deg, #fff0f6, #edf7ff);
+    }
+    .square {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      border: 1px solid #ffffff;
+      border-radius: 17px;
+      color: var(--ink);
+      background: #ffffffeb;
+      box-shadow: 0 3px 10px #5c3a4d0a;
+      cursor: pointer;
+      font: inherit;
+      font-size: clamp(2.6rem, 17vw, 5.3rem);
+      font-weight: 850;
+      line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .16s ease, background-color .16s ease, box-shadow .16s ease;
+    }
+    .square[aria-disabled="false"]:hover { transform: translateY(-2px); box-shadow: 0 7px 16px #5c3a4d15; }
+    .square:focus-visible, .new-game:focus-visible { outline: 3px solid #7b63b7; outline-offset: 3px; }
+    .square[aria-disabled="true"] { cursor: default; }
+    .square.mark-x { color: var(--pink); animation: pop .22s ease-out; }
+    .square.mark-o { color: var(--blue); animation: pop .22s ease-out; }
+    .square.winner { background: #fff4cc; border-color: #f4d981; box-shadow: 0 0 0 2px #f7e8ad; }
+    .actions { margin-top: 20px; }
+    .new-game {
+      min-height: 48px;
+      padding: 0 23px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-size: .95rem;
+      font-weight: 750;
+      transition: transform .16s ease, background-color .16s ease;
+    }
+    .new-game:hover { transform: translateY(-1px); background: #51445f; }
+    .hint { margin: 15px 0 0; color: #696271; font-size: .78rem; }
+    @keyframes pop { 0% { transform: scale(.72); opacity: .4; } 75% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+    @media (max-width: 380px) {
+      body { padding: 16px 12px; }
+      .game { padding: 22px 17px; border-radius: 24px; }
+      .board { gap: 7px; padding: 7px; }
+      .square { border-radius: 13px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" aria-labelledby="title">
+    <p class="eyebrow">A little game for two</p>
+    <h1 id="title">Tic-tac-toe</h1>
+    <p class="intro">Pick a square. Take turns. Have fun.</p>
+
+    <div class="players" aria-label="Players">
+      <div class="player player-x active-x" id="player-x"><strong aria-hidden="true">X</strong> Pink player</div>
+      <div class="player player-o" id="player-o"><strong aria-hidden="true">O</strong> Blue player</div>
+    </div>
+    <p class="status" id="status" aria-live="polite" aria-atomic="true">Pink player (X), your turn.</p>
+
+    <div class="board" id="board" role="group" aria-label="Tic-tac-toe board">
+      <button class="square" type="button" data-index="0" aria-disabled="false" aria-label="Row 1, column 1, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="1" aria-disabled="false" aria-label="Row 1, column 2, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="2" aria-disabled="false" aria-label="Row 1, column 3, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="3" aria-disabled="false" aria-label="Row 2, column 1, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="4" aria-disabled="false" aria-label="Row 2, column 2, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="5" aria-disabled="false" aria-label="Row 2, column 3, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="6" aria-disabled="false" aria-label="Row 3, column 1, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="7" aria-disabled="false" aria-label="Row 3, column 2, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+      <button class="square" type="button" data-index="8" aria-disabled="false" aria-label="Row 3, column 3, empty" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space"></button>
+    </div>
+    <div class="actions"><button class="new-game" id="new-game" type="button">New game</button></div>
+    <p class="hint">Use the arrow keys to move around the board.</p>
+  </main>
+
+  <script>
+    (() => {
+      const squares = [...document.querySelectorAll('.square')];
+      const status = document.querySelector('#status');
+      const playerX = document.querySelector('#player-x');
+      const playerO = document.querySelector('#player-o');
+      const winningLines = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+      let cells = Array(9).fill('');
+      let current = 'X';
+      let finished = false;
+
+      function updateTurn() {
+        playerX.classList.toggle('active-x', !finished && current === 'X');
+        playerO.classList.toggle('active-o', !finished && current === 'O');
+      }
+
+      function play(index) {
+        if (finished || cells[index]) return;
+        cells[index] = current;
+        const square = squares[index];
+        square.textContent = current;
+        square.classList.add(current === 'X' ? 'mark-x' : 'mark-o');
+        square.setAttribute('aria-label', `Row ${Math.floor(index / 3) + 1}, column ${(index % 3) + 1}, ${current}`);
+        square.setAttribute('aria-disabled', 'true');
+
+        const line = winningLines.find(candidate => candidate.every(cell => cells[cell] === current));
+        if (line) {
+          finished = true;
+          squares.forEach(cell => cell.setAttribute('aria-disabled', 'true'));
+          line.forEach(cell => squares[cell].classList.add('winner'));
+          status.textContent = `${current === 'X' ? 'Pink player (X)' : 'Blue player (O)'} wins!`;
+          updateTurn();
+        } else if (cells.every(Boolean)) {
+          finished = true;
+          squares.forEach(cell => cell.setAttribute('aria-disabled', 'true'));
+          status.textContent = "It's a draw! Great game, both of you.";
+          updateTurn();
+        } else {
+          current = current === 'X' ? 'O' : 'X';
+          status.textContent = `${current === 'X' ? 'Pink player (X)' : 'Blue player (O)'}, your turn.`;
+          updateTurn();
+        }
+      }
+
+      squares.forEach((square, index) => {
+        square.addEventListener('click', () => play(index));
+        square.addEventListener('keydown', event => {
+          const row = Math.floor(index / 3);
+          const col = index % 3;
+          const moves = { ArrowUp: [row - 1, col], ArrowDown: [row + 1, col], ArrowLeft: [row, col - 1], ArrowRight: [row, col + 1] };
+          if (!moves[event.key]) return;
+          event.preventDefault();
+          const [nextRow, nextCol] = moves[event.key];
+          if (nextRow >= 0 && nextRow < 3 && nextCol >= 0 && nextCol < 3) squares[nextRow * 3 + nextCol].focus();
+        });
+      });
+
+      document.querySelector('#new-game').addEventListener('click', () => {
+        cells = Array(9).fill('');
+        current = 'X';
+        finished = false;
+        squares.forEach((square, index) => {
+          square.textContent = '';
+          square.setAttribute('aria-disabled', 'false');
+          square.classList.remove('mark-x', 'mark-o', 'winner');
+          square.setAttribute('aria-label', `Row ${Math.floor(index / 3) + 1}, column ${(index % 3) + 1}, empty`);
+        });
+        status.textContent = 'Pink player (X), your turn.';
+        updateTurn();
+        squares[0].focus();
+      });
+    })();
+  </script>
+</body>
+</html>
